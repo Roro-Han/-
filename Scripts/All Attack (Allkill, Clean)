@@ -1,0 +1,66 @@
+local P = game:GetService("Players")
+local R = game:GetService("ReplicatedStorage")
+local S = game:GetService("RunService")
+local lp = P.LocalPlayer
+local rem = R:WaitForChild("Assets"):WaitForChild("Misc"):WaitForChild("CWS_Directory"):WaitForChild("remotes"):WaitForChild("Damage")
+local pk = nil
+
+local function gk()
+    for _, v in pairs(getgc(true)) do
+        if type(v) == "table" and rawget(v, "remote_key") then
+            local k = v.remote_key
+            if type(k) == "table" then
+                for _, rk in pairs(k) do return rk end
+            else return k end
+        end
+    end
+    return nil
+end
+
+local function uk(k)
+    if not k or type(k) ~= "string" then return "" end
+    local a = k:sub(4,4)
+    local p1 = string.byte(k:sub(1,1))
+    local s = (tonumber(a) or 0) * 2
+    if s > 9 then s = 1 end
+    local n = k:gsub(a, tostring(s))
+    local h = p1 + 4 - s
+    if h > 90 then h = 65 end
+    return n:sub(1,0) .. string.char(h) .. n:sub(2)
+end
+
+local function send(h, p, t)
+    if not pk then return end
+    pk = uk(pk)
+    rem:FireServer({
+        ["damage"] = 9e99,
+        ["target"] = h,
+        ["k"] = pk,
+        ["head"] = lp.Character.HumanoidRootPart.Position,
+        ["hit_name"] = p.Name,
+        ["velocity"] = Vector3.new(0, 0, 0),
+        ["tool"] = t,
+        ["auth"] = true
+    })
+end
+
+S.Heartbeat:Connect(function()
+    local ch = lp.Character
+    local rt = ch and ch:FindFirstChild("HumanoidRootPart")
+    local tl = ch and ch:FindFirstChildOfClass("Tool")
+    if not (rt and tl) then return end
+    
+    local nk = gk()
+    if nk then pk = nk end
+    if not pk then return end
+
+    for _, v in ipairs(P:GetPlayers()) do
+        if v ~= lp and v.Character and v.Character:FindFirstChild("Humanoid") then
+            local th = v.Character.Humanoid
+            local tp = v.Character:FindFirstChild("Head") or v.Character:FindFirstChild("UpperTorso")
+            if th.Health > 0 and tp then
+                send(th, tp, tl)
+            end
+        end
+    end
+end)
