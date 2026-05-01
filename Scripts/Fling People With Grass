@@ -1,0 +1,77 @@
+local plr = game.Players.LocalPlayer
+local rs = game:GetService("RunService")
+local target, active, mov = nil, true, 0.1
+
+local hl = Instance.new("Highlight", game.CoreGui)
+hl.FillColor, hl.FillTransparency = Color3.fromRGB(255, 0, 0), 0.3
+
+local function stop()
+    active = false
+    if target then
+        target.AssemblyLinearVelocity = Vector3.zero
+        for _, v in ipairs(target:GetDescendants()) do if v:IsA("Constraint") or v:IsA("Attachment") then v:Destroy() end end
+        target.Massless, target.RootPriority = false, 0
+    end
+    hl.Adornee, plr.MaximumSimulationRadius, plr.SimulationRadius = nil, 1000, 1000
+end
+
+local function setup(c, t)
+    local hum = c:FindFirstChildOfClass("Humanoid")
+    if hum then hum.AutoJumpEnabled = false; hum.Died:Connect(stop) end
+    for _, v in ipairs(c:GetDescendants()) do
+        if v:IsA("BasePart") then
+            local nc = Instance.new("NoCollisionConstraint", t)
+            nc.Part0, nc.Part1 = v, t
+        end
+    end
+end
+
+task.spawn(function()
+    while active do
+        local root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+        if root and (not target or not target.Parent) then
+            local best, maxV = nil, 0
+            for _, v in ipairs(workspace:GetPartBoundsInRadius(root.Position, 300)) do
+                if v:IsA("BasePart") and not v.Anchored and v.Material == Enum.Material.Grass then
+                    local vol = v.Size.X * v.Size.Y * v.Size.Z
+                    if vol > maxV then maxV, best = vol, v end
+                end
+            end
+            target = best; hl.Adornee = target
+            if target then setup(plr.Character, target) end
+        end
+        task.wait(0.5)
+    end
+end)
+
+rs.Heartbeat:Connect(function()
+    if not active or not target or not target.Parent then return end
+    local root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    settings().Physics.AllowSleep = false
+    plr.MaximumSimulationRadius, plr.SimulationRadius = 1e18, 1e18
+    
+    if target.ReceiveAge ~= 0 then
+        root.CFrame, hl.FillColor = target.CFrame, Color3.new(1, 0, 0)
+        target.AssemblyLinearVelocity = Vector3.new(0, 0.1, 0)
+    else
+        hl.FillColor = Color3.new(0, 1, 0)
+        if not target:FindFirstChild("AlignAtt") then
+            local a0, a1 = Instance.new("Attachment", target), Instance.new("Attachment", root)
+            a0.Name, a1.Position = "AlignAtt", Vector3.zero
+            local ap = Instance.new("AlignPosition", target); ap.Attachment0, ap.Attachment1, ap.MaxForce, ap.Responsiveness = a0, a1, 1e30, 200
+            local ao = Instance.new("AlignOrientation", target); ao.Attachment0, ao.Attachment1, ao.MaxTorque, ao.Responsiveness = a0, a1, 1e30, 200
+        end
+
+        local oldV = target.AssemblyLinearVelocity
+        target.AssemblyLinearVelocity = oldV * 10000 + Vector3.new(0, 10000, 0)
+        rs.Stepped:Wait()
+        
+        if active and target and target.Parent then
+            target.AssemblyLinearVelocity = oldV + Vector3.new(0, mov, 0)
+            target.CFrame = CFrame.new(target.Position) * (root.CFrame - root.Position)
+            target.Massless, target.RootPriority, mov = true, 127, -mov
+        end
+    end
+end)
