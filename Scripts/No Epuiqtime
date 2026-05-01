@@ -1,0 +1,26 @@
+local p = game:GetService("Players")
+local l = p.LocalPlayer
+
+local function f(t)
+    if t:IsA("Tool") then
+        local i = t:FindFirstChild("Info")
+        if i and i:IsA("ModuleScript") then
+            local o, d = pcall(require, i)
+            if o then
+                d.equip_time = 0
+            end
+        end
+    end
+end
+
+l.CharacterAdded:Connect(function(c)
+    c.ChildAdded:Connect(f)
+end)
+
+if l.Character then
+    for _, v in pairs(l.Character:GetChildren()) do f(v) end
+    l.Character.ChildAdded:Connect(f)
+end
+
+for _, v in pairs(l.Backpack:GetChildren()) do f(v) end
+l.Backpack.ChildAdded:Connect(f)
