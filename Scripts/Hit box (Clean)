@@ -1,0 +1,36 @@
+local P = game:GetService("Players")
+local R = game:GetService("RunService")
+local L = P.LocalPlayer
+
+local function hb(p)
+	local function up(c)
+		local h = c:WaitForChild("Head", 9)
+		if h then
+			h.Size = Vector3.new(25, 25, 25)
+			h.Transparency = 0.5
+			h.CanCollide = false
+			h.Massless = true
+		end
+	end
+	p.CharacterAdded:Connect(up)
+	if p.Character then up(p.Character) end
+end
+
+for _, v in pairs(P:GetPlayers()) do
+	if v ~= L then hb(v) end
+end
+
+P.PlayerAdded:Connect(hb)
+
+R.RenderStepped:Connect(function()
+	for _, v in pairs(P:GetPlayers()) do
+		if v ~= L and v.Character then
+			local h = v.Character:FindFirstChild("Head")
+			if h and (h.Size.X ~= 25 or h.CanCollide) then
+				h.Size = Vector3.new(25, 25, 25)
+				h.CanCollide = false
+				h.Massless = true
+			end
+		end
+	end
+end)
