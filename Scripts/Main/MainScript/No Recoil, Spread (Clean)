@@ -1,0 +1,35 @@
+local p = game:GetService("Players").LocalPlayer
+
+local function f(t)
+    if t:IsA("Tool") then
+        local i = t:FindFirstChild("Info")
+        if i and i:IsA("ModuleScript") then
+            local o, d = pcall(require, i)
+            if o then
+                d.recoil = {
+                    dir = {X = {0, 0}, Y = {0, 0}},
+                    inout = {0, 0},
+                    rotation = 0
+                }
+                d.spread = {
+                    min = 0, max = 0, 
+                    min_running = 0, mult_running = 0, 
+                    running = 0, jumping = 0, 
+                    alpha = 0, decay_alpha = 0
+                }
+            end
+        end
+    end
+end
+
+p.CharacterAdded:Connect(function(c)
+    c.ChildAdded:Connect(f)
+end)
+
+if p.Character then 
+    for _, v in pairs(p.Character:GetChildren()) do f(v) end
+    p.Character.ChildAdded:Connect(f)
+end
+
+for _, v in pairs(p.Backpack:GetChildren()) do f(v) end
+p.Backpack.ChildAdded:Connect(f)
