@@ -1,0 +1,6 @@
+local P,R,S,lp=game:GetService("Players"),game:GetService("ReplicatedStorage"),game:GetService("RunService"),game:GetService("Players").LocalPlayer
+local rm=R:WaitForChild("Assets"):WaitForChild("Misc"):WaitForChild("CWS_Directory"):WaitForChild("remotes"):WaitForChild("Damage")
+local pk=nil
+local function gk()for _,v in pairs(getgc(true))do if type(v)=="table"and rawget(v,"remote_key")then local k=v.remote_key return type(k)=="table"and k[1] or k end end end
+local function uk(k)if not k or type(k)~="string"then return""end local a,p=k:sub(4,4),k:byte(1)local s=tonumber(a)*2 if s>9 then s=1 end local n=k:gsub(a,tostring(s))local h=p+4-s if h>90 then h=65 end return n:sub(1,0)..string.char(h)..n:sub(2)end
+S.Heartbeat:Connect(function()local ch=lp.Character local rt=ch and ch:FindFirstChild("HumanoidRootPart")local tl=ch and ch:FindFirstChildOfClass("Tool")if not(rt and tl)then return end local nk=gk()if nk then pk=nk end if not pk then return end for _,v in ipairs(P:GetPlayers())do if v~=lp and v.Character and v.Character:FindFirstChild("Humanoid")then local th,tp=v.Character.Humanoid,v.Character:FindFirstChild("Head")if th.Health>0 and tp then pk=uk(pk)rm:FireServer({["damage"]=9e99,["target"]=th,["k"]=pk,["head"]=rt.Position,["hit_name"]=tp.Name,["velocity"]=Vector3.new(),["tool"]=tl,["auth"]=true})end end end end)
